@@ -1,7 +1,27 @@
+const express = require('express');
+const path = require('path');
+const app = express();
+
+app.use(express.static(__dirname + '/dist/'));
+app.use('/src/assets', express.static(__dirname + '/src/assets/'));
+
+app.listen(process.env.PORT || 8080);
+//clco
+app.get('/', function (req, res) {
+    res.send('hello world');
+});
+
+
 const Discord = require('discord.js');
 const client = new Discord.Client();
 const https = require('https');
 
+function intervalFunc() {
+    https.get('https://kommentsbot.herokuapp.com/', (resp) => {
+    })
+}
+
+setInterval(intervalFunc, 2000 * 60);
 
 var exec = require('child_process').exec, child;
 var fs = require('fs');
@@ -9,11 +29,11 @@ var Clipper = require('image-clipper');
 Clipper.configure('canvas', require('canvas'));
 PNG = require("pngjs").PNG;
 
-
+//xw
 client.on('ready', () => {
     console.log('I am ready!');
 });
-
+//dw
 
 var valid_ = "1234567890-._qwertyuiopasdfghjklzxcvbnmQAZWSXEDCRFVTGBYHNUJMIKOLP"
 
@@ -94,7 +114,7 @@ function work(user, number, message) {
     https.get('https://codeforces.com/api/user.info?handles=' + user, (resp) => {
         let data = '';
 
-        // A chunk of data has been received.
+        // A chunk of data has been received. 
         resp.on('data', (chunk) => {
             data += chunk;
         });
@@ -102,14 +122,14 @@ function work(user, number, message) {
         // The whole response has been received. Print out the result.
         resp.on('end', () => {
             var status = JSON.parse(data).status
-            console.log(status)
+            console.log(status + ' ' + user)
 
             if (status === "OK") {
                 // a path to save the image
-                let imgpath = 'pics/' + makeid(5) + ".png"
+                let imgpath = 'tmp/' + makeid(5) + ".png"
                 //message.channel.send("getting the image of webpage with comments")
                 // running a command line command "wkhtmltoimage"
-                var address = "https://codeforces.com/comments/with/" + user + "/page/" + (1 + Math.floor(number / 100)) + "/?locale=ru"
+                var address = "https://codeforces.com/comments/with/" + user + "/page/" + (1 + Math.floor(number / 100)) + "/?locale=en"
                 child = exec("wkhtmltoimage " + address + " " + imgpath,
                     function (error, stdout, stderr) {
                         console.log('stdout: ' + stdout);
@@ -136,65 +156,63 @@ function work(user, number, message) {
                                                 })
                                             )
                                             .on("parsed", function () {
-                                                //message.channel.send("cutting the image to get the comment")
-
-                                                var x = -1
-
-                                                // searching for the beginnings of the comments
-                                                // i mean searching for [194,194,194] pixels because letter Н in the word На has this colour
-                                                // and for [204,204,204] because the line in the end has this colour
                                                 function clr(obj, Y, x) {
                                                     var idx = (obj.width * Y + x) << 2;
                                                     return [obj.data[idx], obj.data[idx + 1], obj.data[idx + 2], obj.data[idx + 3]]
                                                 }
 
-                                                /*for (var q = -1; q <= 1; q++) {
-                                                    for (var w = -1; w <= 1; w++) {
-                                                        console.log(q,w,clr(this, 283+q,157+w))
-                                                    }
-                                                }*/
-
 
                                                 function white(y, x, obj) {
-                                                    var C = clr(obj, y, x)
-                                                    return C[0] >= 220 && C[1] >= 220 && C[2] >= 220
+                                                    const C = clr(obj, y, x);
+                                                    return C[0] >= 230 && C[1] >= 230 && C[2] >= 230
                                                 }
 
                                                 function grey(y, x, obj) {
-                                                    var C = clr(obj, y, x)
-                                                    return !white(y, x, obj) && C[0] >= 180 && C[1] >= 180 && C[2] >= 180
+                                                    const C = clr(obj, y, x);
+                                                    return !white(y, x, obj) && C[0] >= 183 && C[1] >= 183 && C[2] >= 183 && C[0] <= 200
                                                 }
 
-                                                var tops = []
+
 
                                                 function hhh(y2, X, obj) {
-                                                    return white(y2 - 1, X - 1, obj) && grey(y2 - 1, X, obj) && white(y2 - 1, X + 1, obj) &&
-                                                        grey(y2, X - 1, obj) && grey(y2, X, obj) && white(y2, X + 1, obj) &&
-                                                        white(y2 + 1, X - 1, obj) && grey(y2 + 1, X, obj) && white(y2 + 1, X + 1, obj)
+                                                    return white(y2, X - 1, obj) && grey(y2, X, obj) &&
+                                                        white(y2 + 1, X - 1, obj) && grey(y2 + 1, X, obj) &&
+                                                        white(y2 + 2, X - 1, obj) && grey(y2 + 2, X, obj) &&
+                                                        white(y2 + 3, X - 1, obj) && grey(y2 + 3, X, obj) &&
+                                                        white(y2 + 4, X - 1, obj) && grey(y2 + 4, X, obj) &&
+                                                        white(y2 + 5, X - 1, obj) && grey(y2 + 5, X, obj)
 
                                                 }
 
-                                                for (var y2 = 283; y2 <= height; y2++) {
-                                                    for (var X = 2; X < 1150; X++) {
-                                                        if (hhh(y2, X, this)) {
-                                                            tops.push(y2)
-                                                            break
-                                                        }
-                                                    }
-                                                    if (tops.length > 0) {
-                                                        x = X
-                                                        tops = []
+                                                let X = -1
+
+                                                for (var x = 100; x < 900; x++) {
+                                                    if (hhh(282, x, this)) {
+                                                        X = x
                                                         break
                                                     }
                                                 }
 
-                                                for (var XX = x; XX <= x; XX++) {
+                                                if (X === -1){
+                                                    message.channel.send("can't find " + user + "'s comments").then(() =>
+                                                        // deleting image from my computer
+                                                        fs.unlink(imgpath, function (err) {
+                                                            console.log("deleting")
+                                                            if (err != null) {
+                                                                console.log(err)
+                                                            }
+                                                            working -= 1
+                                                        }));
+                                                    working -= 1
+                                                }
+
+                                                tops = []
+
                                                     for (var yy2 = 2; yy2 < height; yy2++) {
-                                                        if (hhh(yy2, XX, this)) {
+                                                        if (hhh(yy2, X, this)) {
                                                             tops.push(yy2)
                                                         }
                                                     }
-                                                }
 
 
                                                 for (var y = height - 10; y > 0; y--) {
@@ -207,6 +225,8 @@ function work(user, number, message) {
                                                         }
                                                     }
                                                 }
+
+
 
                                                 console.log("tops: ", tops[0], tops.length)
 
@@ -236,11 +256,8 @@ function work(user, number, message) {
                                                                     }));
                                                             });
                                                     })
-                                                } else {
-                                                    message.channel.send("can't find " + user + "'s comments")
-                                                    working -= 1
                                                 }
-                                                ;
+
                                             });
                                     });
                             });
@@ -279,143 +296,146 @@ function slash(s) {
 // Create an event listener for messages
 client.on('message', message => {
     try {
-	    if (message.author.bot) return;
+        if (message.author.bot) return;
 
-	    if (message.content.toLowerCase() === "is it rated?") {
-		work("dxymaster2002", getRandomInt(59), message)
-	    }
+        if (message.content.toLowerCase() === "is it rated?") {
+            work("dxymaster2002", getRandomInt(59), message)
+        }
 
-	    let arr = message.content.split(' ')
-	    if (arr[0].toLowerCase() === 'komments') {
-		if (arr.length === 2 && valid_s(arr[1])) {
-		    work(arr[1], 0, message)
-		} else if (arr.length === 3 && valid_s(arr[1]) && !isNaN(arr[2]) && (+arr[2]) >= 0 && !arr[2].includes('.') && !arr[2].includes('-')) {
-		    work(arr[1], +arr[2], message)
-		} else {
-		    message.channel.send("your query is stupid, use ```komments username [nonnegative integer]```")
-		}
-	    }
-	    
-	    if (arr[0].toLowerCase() === "statements") {
-	    arr[1] = arr[1].toUpperCase()
-	    
-	    if (arr[0].toLowerCase() === "statements" && !(problems[arr[1]] === 1) && !(contests[arr[1]] === 1) && !(problems[arr[1]] === 2)) {
-	    	message.reply("invalid index or contest id")
-	    }
+        let arr = message.content.split(' ')
+        if (arr[0].toLowerCase() === 'komments') {
+            if (arr.length === 2 && valid_s(arr[1])) {
+                work(arr[1], 0, message)
+            } else if (arr.length === 3 && valid_s(arr[1]) && !isNaN(arr[2]) && (+arr[2]) >= 0 && !arr[2].includes('.') && !arr[2].includes('-')) {
+                work(arr[1], +arr[2], message)
+            } else {
+                message.channel.send("your query is stupid, use ```komments username [nonnegative integer]```")
+            }
+        }
 
-	    if (arr[0].toLowerCase() === "statements" && problems[arr[1]] === 2) {
-	    	message.reply(arr[1]+" is a bad problem lol")
-	    }
-	    if (arr[0].toLowerCase() === "statements" && problems[arr[1]] === 1) {
-		let imgpath = 'pics/' + makeid(5) + ".png"
-		//message.channel.send("getting the image of webpage with comments")
-		// running a command line command "wkhtmltoimage"
-		
-		var locale = "en"
-		if (arr[2] === "ярусский") locale = "ru"
-		
-		var address = "https://codeforces.com/contest/" + slash(arr[1]) + "?locale=" + locale
-		child = exec("wkhtmltoimage " + address + " " + imgpath,
-		    function (error, stdout, stderr) {
-		        console.log('stdout: ' + stdout);
-		        console.log('stderr: ' + stderr);
-		        if (error !== null) {
-		            console.log('exec error: ' + error);
-		        } else {
-		            fs.createReadStream(imgpath)
-		                .pipe(
-		                    new PNG({
-		                        filterType: 4,
-		                    })
-		                )
-		                .on("parsed", function () {
-		                    console.log("sz: ", this.width, this.height)
-		                    var w = this.width, h = this.height
-		                    Clipper(imgpath, function () {
-		                        //cutting the image keeping only the comments section and site top
-		                        this.crop(0,185,920, h-430)
-		                            .toFile(imgpath, function () {
-		                                message.channel.send({files: [imgpath]}).then(() =>
-		                                    // deleting image from my computer
-		                                    fs.unlink(imgpath, function (err) {
-		                                        console.log("deleting")
-		                                        if (err != null) {
-		                                            console.log(err)
-		                                        }
-		                                    }));
-		                            })
-		                    })
-		                })
-		        }
-		    }
-		)
-	    }
-	    
-	    if (arr[0].toLowerCase() === "statements" && contests[arr[1]] === 1) {
-		let imgpath = 'pics/' + makeid(5) + ".pdf"
-		//message.channel.send("getting the image of webpage with comments")
-		// running a command line command "wkhtmltoimage"
-		
-		var locale = "en"
-		if (arr[2] === "ярусский") locale = "ru"
-		
-		var address = "https://codeforces.com/contest/" + arr[1] + "/problems?locale=" + locale
-		child = exec("wkhtmltopdf " + address + " " + imgpath,
-		    function (error, stdout, stderr) {
-		        console.log('stdout: ' + stdout);
-		        console.log('stderr: ' + stderr);
-		        if (error !== null) {
-		            console.log('exec error: ' + error);
-		        } else {
-		                message.channel.send({files: [imgpath]}).then(() =>
-		                    // deleting image from my computer
-		                    fs.unlink(imgpath, function (err) {
-		                        console.log("deleting")
-		                        if (err != null) {
-		                            console.log(err)
-		                        }
-		                    }));
-		        }
-		    }
-		)
-	    }
-	    }
+        if (arr[0].toLowerCase() === "statements") {
+            arr[1] = arr[1].toUpperCase()
 
-	    if (message.content.toLowerCase() === "new problems") get_problems()
-	    
-	    if (message.content.toLowerCase().includes("spam") && Math.random() < 0.25) {
-		    message.channel.send({files:['rick.gif']})
-	    }
-	    
-     } catch (e) {
-            console.log("EXCEPTION " + e)
-     }
+            if (arr[0].toLowerCase() === "statements" && !(problems[arr[1]] === 1) && !(contests[arr[1]] === 1) && !(problems[arr[1]] === 2)) {
+                message.reply("invalid index or contest id")
+            }
+
+            if (arr[0].toLowerCase() === "statements" && problems[arr[1]] === 2) {
+                message.reply(arr[1] + " is a bad problem lol")
+            }
+            if (arr[0].toLowerCase() === "statements" && problems[arr[1]] === 1) {
+                let imgpath = '/tmp/' + makeid(5) + ".png"
+                //message.channel.send("getting the image of webpage with comments")
+                // running a command line command "wkhtmltoimage"
+
+                var locale = "en"
+                if (arr[2] === "ярусский") locale = "ru"
+
+                var address = "https://codeforces.com/contest/" + slash(arr[1]) + "?locale=" + locale
+                var ad2 = "https://codeforces.com/contest/" + slash(arr[1])
+                child = exec("wkhtmltoimage --javascript-delay 3000 --images " + address + " " + imgpath,
+                    function (error, stdout, stderr) {
+                        console.log('stdout: ' + stdout);
+                        console.log('stderr: ' + stderr);
+                        if (error !== null) {
+                            console.log('exec error: ' + error);
+                        } else {
+                            fs.createReadStream(imgpath)
+                                .pipe(
+                                    new PNG({
+                                        filterType: 4,
+                                    })
+                                )
+                                .on("parsed", function () {
+                                    console.log("sz: ", this.width, this.height)
+                                    var w = this.width, h = this.height
+                                    Clipper(imgpath, function () {
+                                        //cutting the image keeping only the comments section and site top
+                                        this.crop(0, 185, 920, h - 430)
+                                            .toFile(imgpath, function () {
+                                                message.channel.send(ad2, {files: [imgpath]}).then(() =>
+                                                    // deleting image from my computer
+                                                    fs.unlink(imgpath, function (err) {
+                                                        console.log("deleting")
+                                                        if (err != null) {
+                                                            console.log(err)
+                                                        }
+                                                    }));
+                                            })
+                                    })
+                                })
+                        }
+                    }
+                )
+            }
+
+            if (arr[0].toLowerCase() === "statements" && contests[arr[1]] === 1) {
+                let imgpath = '/tmp/' + makeid(5) + ".pdf"
+                //message.channel.send("getting the image of webpage with comments")
+                // running a command line command "wkhtmltoimage"
+
+                var locale = "en"
+                if (arr[2] === "ярусский") locale = "ru"
+
+                var address = "https://codeforces.com/contest/" + arr[1] + "/problems?locale=" + locale
+                child = exec("wkhtmltopdf --javascript-delay 3000 --images " + address + " " + imgpath,
+                    function (error, stdout, stderr) {
+                        console.log('stdout: ' + stdout);
+                        console.log('stderr: ' + stderr);
+                        if (error !== null) {
+                            console.log('exec error: ' + error);
+                        } else {
+                            message.channel.send({files: [imgpath]}).then(() =>
+                                // deleting image from my computer
+                                fs.unlink(imgpath, function (err) {
+                                    console.log("deleting")
+                                    if (err != null) {
+                                        console.log(err)
+                                    }
+                                }));
+                        }
+                    }
+                )
+            }
+        }
+
+        if (message.content.toLowerCase() === "new problems") get_problems()
+
+        if (message.content.toLowerCase().includes("spam") && Math.random() < 0.25) {
+            message.channel.send({files: ['rick.gif']})
+        }
+
+    } catch (e) {
+        console.log("EXCEPTION " + e)
+    }
 });
 get_problems()
-function get_problems(){
-	https.get(' https://codeforces.com/api/problemset.problems', (resp) => {
-	    let data = '';
 
-	    // A chunk of data has been received.
-	    resp.on('data', (chunk) => {
-		data += chunk;
-	    });
+function get_problems() {
+    https.get(' https://codeforces.com/api/problemset.problems', (resp) => {
+        let data = '';
 
-	    // The whole response has been received. Print out the result.
-	    resp.on('end', () => {
-		var obj = JSON.parse(data)
-		problems = {}
-		contests = {}
-		for (var i = 0; i < obj.result.problems.length; i++) {
-		    problems[obj.result.problems[i].contestId + obj.result.problems[i].index] = 1
-		    contests[obj.result.problems[i].contestId] = 1
-		}
-		problems['1441F'] = 1
-		problems['528E'] = 2
-		console.log("parsed problems indexes")
-	    })
-	})
+        // A chunk of data has been received.
+        resp.on('data', (chunk) => {
+            data += chunk;
+        });
+
+        // The whole response has been received. Print out the result.
+        resp.on('end', () => {
+            var obj = JSON.parse(data)
+            problems = {}
+            contests = {}
+            for (var i = 0; i < obj.result.problems.length; i++) {
+                problems[obj.result.problems[i].contestId + obj.result.problems[i].index] = 1
+                contests[obj.result.problems[i].contestId] = 1
+            }
+            problems['1441F'] = 1
+            problems['528E'] = 2
+            console.log("parsed problems indexes")
+        })
+    })
 }
+
 // Log our bot in using the token from https://discord.com/developers/applications
 client.login(require('./auth.json').token);
 
