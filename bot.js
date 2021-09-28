@@ -126,7 +126,7 @@ function work(user, number, message) {
 
             if (status === "OK") {
                 // a path to save the image
-                let imgpath = 'tmp/' + makeid(5) + ".png"
+                let imgpath = '/tmp/' + makeid(5) + ".png"
                 //message.channel.send("getting the image of webpage with comments")
                 // running a command line command "wkhtmltoimage"
                 var address = "https://codeforces.com/comments/with/" + user + "/page/" + (1 + Math.floor(number / 100)) + "/?locale=en"
