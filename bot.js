@@ -5,7 +5,7 @@ const app = express();
 app.use(express.static(__dirname + '/dist/'));
 app.use('/src/assets', express.static(__dirname + '/src/assets/'));
 
-app.listen(process.env.PORT || 8080);
+app.listen(process.env.PORT || 8083);
 //clco
 app.get('/', function (req, res) {
     res.send('hello world');
@@ -89,8 +89,13 @@ function makeid(length) {
     return result.join('');
 }
 
+var setY = 281
 
-function work(user, number, message) {
+
+
+async function work(user, number, message, number2) {
+    if (number2 === undefined)
+        number2 = number
     if (user.toLowerCase() == "vammadur") {
         message.channel.send("stupid vammadur he's unfetchable")
         return
@@ -144,7 +149,8 @@ function work(user, number, message) {
                             if (height > 32400) // can't handle long images
                                 height = 32400
                             console.log("height: " + height)
-                            Clipper(imgpath, function () {
+
+                            Clipper(imgpath, async function () {
                                 //cutting the image keeping only the comments section and site top
                                 this.crop(20, 0, 880, height)
                                     .toFile(imgpath, function () {
@@ -156,6 +162,8 @@ function work(user, number, message) {
                                                 })
                                             )
                                             .on("parsed", function () {
+                                                                    
+
                                                 function clr(obj, Y, x) {
                                                     var idx = (obj.width * Y + x) << 2;
                                                     return [obj.data[idx], obj.data[idx + 1], obj.data[idx + 2], obj.data[idx + 3]]
@@ -164,36 +172,37 @@ function work(user, number, message) {
 
                                                 function white(y, x, obj) {
                                                     const C = clr(obj, y, x);
-                                                    return C[0] >= 230 && C[1] >= 230 && C[2] >= 230
+                                                    return C[2] >= 230 && C[1] >= 230
                                                 }
 
                                                 function grey(y, x, obj) {
                                                     const C = clr(obj, y, x);
-                                                    return !white(y, x, obj) && C[0] >= 183 && C[1] >= 183 && C[2] >= 183 && C[0] <= 200
+                                                    return !white(y, x, obj) && C[1] >= 200 && C[1] <= 230 && C[2] >= 200 && C[2] <= 230
                                                 }
 
 
-
                                                 function hhh(y2, X, obj) {
-                                                    return white(y2, X - 1, obj) && grey(y2, X, obj) &&
-                                                        white(y2 + 1, X - 1, obj) && grey(y2 + 1, X, obj) &&
-                                                        white(y2 + 2, X - 1, obj) && grey(y2 + 2, X, obj) &&
-                                                        white(y2 + 3, X - 1, obj) && grey(y2 + 3, X, obj) &&
-                                                        white(y2 + 4, X - 1, obj) && grey(y2 + 4, X, obj) &&
-                                                        white(y2 + 5, X - 1, obj) && grey(y2 + 5, X, obj)
-
+                                                    return white(y2, X + 1, obj) && grey(y2, X, obj) &&
+                                                        white(y2 + 1, X + 1, obj) && grey(y2 + 1, X, obj) &&
+                                                        white(y2 + 2, X + 1, obj) && grey(y2 + 2, X, obj) && white(y2,X+2,obj) && white(y2+1,X+2,obj) && white(y2+2,X+2,obj)
                                                 }
 
                                                 let X = -1
 
-                                                for (var x = 100; x < 900; x++) {
-                                                    if (hhh(282, x, this)) {
-                                                        X = x
-                                                        break
+                                                for (var y = setY; y <= setY; y++) {
+                                                    for (var x = 100; x < 900; x++) {
+                                                        if (hhh(y, x, this)) {
+                                                            X = x
+                                                            break
+                                                        }
                                                     }
+                                                    if (X !== -1) break;
                                                 }
+                                                
+                                                //message.channel.send("debug: X " + X)
 
-                                                if (X === -1){
+
+                                                if (X === -1) {
                                                     message.channel.send("can't find " + user + "'s comments").then(() =>
                                                         // deleting image from my computer
                                                         fs.unlink(imgpath, function (err) {
@@ -201,18 +210,21 @@ function work(user, number, message) {
                                                             if (err != null) {
                                                                 console.log(err)
                                                             }
-                                                            working -= 1
                                                         }));
                                                     working -= 1
+                                                    return
                                                 }
 
                                                 tops = []
 
-                                                    for (var yy2 = 2; yy2 < height; yy2++) {
-                                                        if (hhh(yy2, X, this)) {
-                                                            tops.push(yy2)
-                                                        }
+                                                for (var yy2 = 2; yy2 < height; yy2++) {
+                                                    if (hhh(yy2, X, this)) {
+                                                        if (tops.length > 0 && yy2 - tops[tops.length - 1] < 50)
+                                                            continue
+                                                        tops.push(yy2)
+                                                	  //message.channel.send("debug: yy2 " + yy2)
                                                     }
+                                                }
 
 
                                                 for (var y = height - 10; y > 0; y--) {
@@ -227,10 +239,11 @@ function work(user, number, message) {
                                                 }
 
 
-
                                                 console.log("tops: ", tops[0], tops.length)
 
+                                                number2 = number2 - number
                                                 number %= 100
+                                                console.log(number2)
 
                                                 if (tops.length > 1 && number + 1 < tops.length) {
                                                     if (clr(this, tops[number + 1], x)[0] === 204) {
@@ -241,9 +254,10 @@ function work(user, number, message) {
                                                         console.log("ypfp: ", ypfp)
                                                         tops[number + 1] = tops[number + 0] + 2 * (ypfp - tops[number + 0])
                                                     }
+                                                    working -= 1
                                                     Clipper(imgpath, function () {
                                                         // cutting image to comment
-                                                        this.crop(0, tops[number + 0] - 27, 879, tops[number + 1] - tops[number + 0])
+                                                        this.crop(0, tops[number + 0] - 27, 879, tops[Math.min(number + 1 + number2, tops.length - 1)] - tops[number + 0])
                                                             .toFile(imgpath, function () {
                                                                 message.channel.send({files: [imgpath]}).then(() =>
                                                                     // deleting image from my computer
@@ -252,10 +266,19 @@ function work(user, number, message) {
                                                                         if (err != null) {
                                                                             console.log(err)
                                                                         }
-                                                                        working -= 1
                                                                     }));
                                                             });
                                                     })
+                                                } else {
+                                                    message.channel.send("can't find " + user + "'s comment number #" + number + " on that page").then(() =>
+                                                        // deleting image from my computer
+                                                        fs.unlink(imgpath, function (err) {
+                                                            console.log("deleting")
+                                                            if (err != null) {
+                                                                console.log(err)
+                                                            }
+                                                        }));
+                                                    working -= 1
                                                 }
 
                                             });
@@ -297,19 +320,31 @@ function slash(s) {
 client.on('message', message => {
     try {
         if (message.author.bot) return;
-
+        
+        if (message.content.toLowerCase() === "yes") {
+            work("rotavirus", 367, message)
+        }
+        
         if (message.content.toLowerCase() === "is it rated?") {
             work("dxymaster2002", getRandomInt(59), message)
         }
 
         let arr = message.content.split(' ')
+        
+        if (arr[0].toLowerCase() === "set" && arr[1] == "Y") {
+        	setY = +arr[2]
+        }
+        
         if (arr[0].toLowerCase() === 'komments') {
+            console.log(arr, +arr[2] <= +arr[3], arr[2] % 100 === arr[3] % 100)
             if (arr.length === 2 && valid_s(arr[1])) {
                 work(arr[1], 0, message)
             } else if (arr.length === 3 && valid_s(arr[1]) && !isNaN(arr[2]) && (+arr[2]) >= 0 && !arr[2].includes('.') && !arr[2].includes('-')) {
                 work(arr[1], +arr[2], message)
+            } else if (arr.length === 4 && valid_s(arr[1]) && !isNaN(arr[2]) && (+arr[2]) >= 0 && !arr[2].includes('.') && !arr[2].includes('-') && !isNaN(arr[2]) && (+arr[3]) >= 0 && !arr[3].includes('.') && !arr[3].includes('-') && +arr[2] <= +arr[3]) {
+                work(arr[1], +arr[2], message, +arr[3])
             } else {
-                message.channel.send("your query is stupid, use ```komments username [nonnegative integer]```")
+                message.channel.send("your query is stupid, use ```komments username [nonnegative integer] [maybe another nonnegative integer that is bigger than the first one but lies in the same hundred]```")
             }
         }
 
@@ -438,4 +473,3 @@ function get_problems() {
 
 // Log our bot in using the token from https://discord.com/developers/applications
 client.login(require('./auth.json').token);
-
