@@ -217,7 +217,7 @@ async function work(user, number, message, number2) {
 
                                                 tops = []
 
-                                                for (var yy2 = 2; yy2 < height; yy2++) {
+                                                for (var yy2 = setY-50; yy2 < height; yy2++) {
                                                     if (hhh(yy2, X, this)) {
                                                         if (tops.length > 0 && yy2 - tops[tops.length - 1] < 50)
                                                             continue
